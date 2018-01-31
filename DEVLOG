@@ -1,0 +1,377 @@
+01-12-2017
+I figure #devember might be a good opportunity to get this done. And while
+a text file on github isn't the most amazing devlog, it'll have to do.
+Well, I want a flexibles simulation software for the logistic branching
+process, described here:
+
+Lambert, Amaury. The branching process with logistic growth. Ann. Appl. Probab. 15 (2005), no. 2, 1506--1535. doi:10.1214/105051605000000098. https://projecteuclid.org/euclid.aoap/1115137984
+
+and while I have previously done it with Gillespie's algorithm, it's just too
+slow for my use case. So instead, I'm going to implement it with tau leaping.
+
+Also some required features:
+ - Reproduction rate and maybe death rate need to be
+   highly customizable.
+ - They need to be time-variable according to some user-set protocol.
+   Possibly a protocol dependent on system state.
+ - Cells need several types of possible genomes
+    - Limited discrete type (SNPs and stuff)
+    - Unlimited discrete type (why not?, possibly single sided limit?)
+    - Limited continuous type (Like protein expression)
+    - Unlimited continuous type (completionism yo)
+   So probably implement that with templates for maximum speed.
+
+
+02-12-2017
+After attempting to hit Ballmer's peak yesterday I'm immediately behind
+schedule. Let's catch up today.
+First, the CRAPL-License covers my concerns about opensourcing my scientific
+code before I use it myself, so included that.
+Onto a more important development question. The logistic equation has an
+interaction effect term. with ' denoting a derivative
+
+Z' = b*Z - c*Z²    (1)
+            ^
+            this is the interaction effect
+
+and the branching process analogue has 3 relevant rates
+
+per cell:
+a constant birthrate p
+a constant deathrate d
+deathrate from competition c(n-1)
+
+or for the total population of n particles:
+birthrate p*n
+deathrate d*n + c*n*(n-1)
+
+And the grand question is, which of these variables should be allowed to vary
+with the genome. I figure, I should allow any to vary for generality. But
+for optimization I think it will be extremely useful if the program knows
+which one's are constant. Can I use some type-trait construct to let the
+computation core know what it can simplify?
+
+First objective then:
+Make simulation core, that takes a cell object by template.
+Use gillespies algorithm to simulate for a set amount of time, no optimizations.
+Cell objects need to have:
+  mutate()
+    change the genome, called for any new cell
+  get_event_rate(n)
+    get total event rate, dependent on n (if c != 0)
+  do_event()
+    if cell is selected, do an event.
+
+This should give me something to start with, total code will probably need to go
+through a couple of development iterations.
+
+
+04-12-2017
+Summing up todays and yesterdays bit of coding.
+Super simple implementation finished. Now for lots of improvements to be made :)
+For the reader who doesn't know, Gillespies algorithm is this really simple way
+of simulating a stochastic process.
+
+Imagine you have some things that happen at rates a, b, and c.
+The events are uncorrelated in time, so knowing when the last happened doesn't
+predict when the next one will. Well it turns out that the waiting time
+between events for of these processes is exponentially distributed with rate a,
+b or c. But waiting time between any event is exponentially distributed with
+rate a + b + c.
+
+So, we wait for that long, then we do an event. To know what event to do is
+also really simple. Just use a categorical distribution, so select a rate
+weighting by the rates.
+i.e.
+select a with probability a / (a + b + c)
+select b with probability b / (a + b + c)
+select c with probability c / (a + b + c)
+And then do the event.
+This is an exact simulation, so that's nice, but it scales super bad when there
+is a large number of possible events. Since every cell in my simulation has
+a rate (actually 3 rates), then it becomes pretty much impossible to use this
+algorithm. Because I'd like to simulate about 100 000 cells or more.
+
+That's why I need tau-leaping. But explaining that I will leave for another day.
+
+
+07-12-2017
+I ougth to be better at writing in this every day.
+Did some testing with the current program, and with minor updates I think
+it now simulates correctly. Added some more to the printing for testing that.
+Eventually, printing should probably be abstracted out somehow. Probably some
+more advanced recording class thing (I think tree based is the way to go this
+time). Also started working on minor optimization right away, that I think will
+be a neccessary part.
+
+Basically if the birth/death/interaction-death rates dont change, then there is
+no need to sample them from every cell. So the LB-process should get that info
+from the cell type and automatically restructure the simulation loop to
+not do any more calculations than neccessary. Because if they dont change
+then getting the value once and multiplying with cell count is vastly better
+than summing over all cells every step.
+
+I think a similar thing could maybe be included if only discrete types are used.
+Then it could get values for each type only once (assuming they only depend
+on discrete type) and multiply by number of that type present. Continuous
+types present the biggest slowdown here it seems.
+
+
+08-12-2017
+This optimization idea turns out to be fairly tricky to implement. The problem
+is that I need a vector of individual cell rates to select the cell. But this
+is hugely wasteful to calculate. I could use a valarray to try and use
+parallelization for summing the known constants, but that's barely faster.
+
+Maybe a binary search for a certain point in the event_rate vector assuming
+I have a vector of the varying part and know the constant part. Then I can reduce
+N summations to log(N) summations + multiplications. Sounds faster in theory
+anyway?
+ - Nope, probably not. Supposedly, the std::discrete_distritbution runs in
+   amortized constant time, so log(N) isn't going to beat that.
+   UPDATE:
+   Yes, probably. operator() for the discrete distribution is amortized constant
+   but the constructor is linear in the number of items. Maybe because
+   it has to normalize the weights.
+
+I suppose just summing the known constant rates and initializing the vector to
+that is the best I can do? Or maybe not! This finer details of this optimization
+will probably wait until after implementing tau-leaping, because I expect that
+to have the biggest contribution.
+
+
+09-12-2017
+Code not provided but:
+Tested discrete_distribution scaling, and indeed it seems to be linear in the
+number of items to choose from. Testing reveals that the sampling bit is
+constant time, as specified, and the constructor is linear, also as specified.
+So I'm glad that it follows the standard then :)
+
+This means that there is maybe some optimization there for me. It would rely
+on knowing the total so that no normalization step is neccessary.
+
+I think this optimiztion is totally premature however. So I'll leave it for now.
+
+
+10-12-2017
+Initial work on tau-leaping algorithm. Check out this paper for details:
+
+Gillespie, D. T. (2001). "Approximate accelerated stochastic simulation of chemically reacting systems" (PDF). The Journal of Chemical Physics. 115 (4): 1716. doi:10.1063/1.1378322
+
+and the idea is to select with something from this maybe:
+
+Cao, Y.; Gillespie, D. T.; Petzold, L. R. (2006). "Efficient step size selection for the tau-leaping simulation method" (PDF). The Journal of Chemical Physics. 124 (4): 044109. doi:10.1063/1.2159468. PMID 16460151
+
+Hopefully, my studying of this paper so that I know what to do counts as
+coding :)
+
+
+11-12-2017
+So, remember Gillespie's direct algorithm which I described?
+Basically, it consisted of two things:
+1. Wait for the next reaction
+2. Select reaction
+And the problem is that as the number of things in simulation grows, the
+waiting time shrinks. So a time interval will contain a vast number of
+events, and this makes simulation slow. Also, the point of the algorithm
+is to look at the small stochastic effects present when there are rare
+cells/particles/whatever. But the main slowdown comes from the things of
+which there are plenty. So tau-leaping tries to circumvent this.
+
+Consider instead hopping forward a fixed amount in time. If we knew how
+the number and types of events in that interval are distributed then we
+can sample it super easily and take comparatively huge time-steps.
+However, this becomes inaccurate if some cell goes extinct within the
+interval (and probably if something becomes extant too). So the trick is
+to take steps that are small enough that this is unlikely, and to do
+exact simulations only when absolutely neccessary.
+
+More precisely, the inaccuracy happens when an event probability changes
+during the time hop.
+
+Assuming this, updating a cell count basically becomes
+x += P(r, dt)
+where P is the poisson distribution. (super simplified)
+
+The speedup comes from making sure that the jump is long enough that
+the higher cost of calculating it outweighs the cost of exactly calculating
+that many reactions. And it comes at the price of accuracy. If we take
+infinitesimal jumps then it is exactly equivalent, though ofc, much slower.
+
+Looking at the tau-leaping method now, I see what might be a problem for my
+use case. Consider having a continuous genome variable. Well, do we also
+need to consider reaction paths for the (infinite) other cells whose
+genome is currently non-existant? In that case, this method is intractable.
+Although
+The expected number of these events is surely 0 right? I.e. the rate for the
+poisson distribution is 0, so they cannot happen.
+Counter-although
+Isn't this also a problem for extant continuous cells? I.e. would we have to
+sample the poisson for each and every one? and would that even be exact enough
+since they are now not numerous and probably don't fulfill assumptions?
+
+Assuming the mutation for continuous types is something simple (like normal
+distribution) it is simple enough to estimate the effect over a tau-leap.
+So that is no problem.
+
+Well, shit. Does this mean I have to change the project name? xD
+Because I'm simply not willing to scap continuous types.
+And because I've researched it before, there is afaik no way of estimating
+the distribution of a continuous type in a branching walk when the
+fitness parameter depends on the continuous type. Or atleast, it's an
+unsolved problem mathematically.
+
+From my experimentation, the continuous parameter distribution is simply
+shifted at a speed depending on the derivative of fitness along the
+continuous variable. (This assumes gaussian mutation). If I could prove
+that this is a reasonable assumption, then I could still use tau-leaping
+probably. I could just count everything which differs only by a continuous
+parameter as one group, then replicate and sample from the new shifted
+distribution.
+
+How annoying...
+
+Update: logically, what I just said probably isn't a reasonable assumption.
+Because if it is true, the distribution of a continuous parameter can never
+change, only move. And why would that be true?
+
+
+12-12-17
+So I guess this is turning more into a maths project than a programming one.
+Todays reading:
+
+David F. Anderson (2007). A modified next reaction method for simulating chemical systems with time dependent propensities and delays. The Journal of Chemical Physics 127, 214107 (2007); https://doi.org/10.1063/1.2799998 
+
+If tau-leaping is infeasible for my system, lets investigate a better exact
+method.
+
+
+20-12-17
+Schedule went to hell, and I suppose I failed the challenge or something.
+Anyway, the modified next reaction method above seems interesting to implement,
+so that's what I'm gonna do. Maybe good approximations will jump out at me
+eventually. So, the above approach requires keeping some variables for
+each reaction type, or cell type in my case.
+So I think i will have like:
+Simulation engine:
+  Owns structure of state objects:
+    each state objects holds a cell type reference
+    state object can represent multiple cells
+    maybe let cell-rates depend on the simulation engine state vector
+      => evolutionary game theory
+
+
+21-12-17
+So in my current implementation, I select cells based on a total event rate.
+This then requires selecting event in a cell, with yet another random number.
+So that's three random numbers per event, even worse than normal gillespie.
+For changing to the next reaction method, probably I should just treat all
+three (birth, death, interaction death) as separate 'reactions'.
+
+But I need some connectivity between these events right? Because in a death
+event it's very possible that a birth and death events are eliminated. Thus
+having connectivity means I would save two recalculations of the propensity
+function. Ofc, if I'm alredy doing over half a million recalculations does
+two extra really matter? I guess it's simpler to just cull any reactions
+that yield a 0 for the propensity function.
+ALTHOUGH, that might be wrong. We can imagine a situation where an event
+should exist but doesn't happen during some interval. For instance,
+treatment could make one cell type effectively stop reproducing (to numeric
+limits), during some interval. But when that is subsequently removed, if the
+event has been destroyed restoring it to the list will be tricky.
+So that argues in favour of connectivity. Cell nonexistance guarantees
+that no events will take place. Probably this sholud be built into a dependency
+graph, but for now I think a shared_ptr with the cell count is fine. Then
+I can cull anything with 0 cells, and a triplet of rates will keep the
+important part of their interaction.
+
+
+27-12-17
+Merry christmas to anyone reading :)
+So, I might have made a terrible design decision last update, when I use member
+function pointers instead of virtual functions. Aaand, there's yet another
+question. Since this next-reaction approach minimizes rng by treating all
+reactions individually basically, shouldn't I also split reproduction and
+reproduction with mutation into two separate reactions? To be fair, with a
+continuous parameter, there is actually no difference (as every new cell is
+almost surely a mutant). But if there are mutations that only happen with
+some probability, I could feasibly split it into two reactions. This way, if
+mutaions are rare (as they should be usually) It saves generating a random
+number for the mutation-induced-change in the vast majority of cases.
+
+Still, I think I will get this implementation to a running state first.
+For practice, if nothing else.
+
+
+01-01-18
+Happy new year!
+Well, the code I have at the moment consistently segfaults at the same cell
+count. I suspect it's because of vector reallocation when it is expanded.
+With that in mind, It's probably worth writing a version without continuous
+parameters. Then, the straightforward implementation from the paper can be used.
+Having something that works should make successive versions less error prone.o
+This implementation will have finite discrete types.
+
+
+18-01-18
+Interesting new find I think.
+So, looking back at the LB-model, I don't think it's appropriate to model all
+the size limitation as a increased death rate. Simply because the total number
+of dead cells quickly becomes absurdly large. Now, I tried the opposite, i.e.
+to model the whole limitation by lowering birth rate instead:
+
+birthrate p*n - c*n*(n-1)
+deathrate d*n
+
+but this also produces unlikely results. Because like this, the population size
+variance at equillibrium becomes very low, and population size becomes hard-
+capped. Neither of which is all that realistic.
+
+This leads me to conclude that somewhere in between is preferable.
+
+birthrate p*n - r*n*(n-1)
+deathrate d*n + s*n*(n-1)
+
+Which should allow for a sensible number of dead cells, as well as mostly
+removing the hard cap. Alas, it does introduce another unknown. But I think
+it is neccessary for the model to be (more) realistic.
+
+It follows that at equillibrium
+
+p - r(n-1) = d + s(n-1)
+
+and the equillibrium size is
+
+n = 1 + (p-d)/(s+r)
+
+since n >> 1 (in any scenario I care about) this means
+
+(p-d)/(s+r) >> 0
+
+p - d >> s + r
+
+and that
+
+p > d  and  s + r > 0
+
+Note that while
+
+p < d  and  s + r < 0
+
+technically also fulfills the expected population size equation above, it has no
+realistic meaning in the context of population dynamics as far as I can tell.
+Basically, it becomes a repelling fixed point rather than an attractive one.
+Under these circumstances,
+  birth rate grows with population size
+  death rate shrinks with population size
+Clearly, the upper limit cannot be stable, as death rate will reach 0, at which
+point the population almost surely keeps growing forever.
+Similarly, the lower end is also not stable. A small downwards deviation from
+the expected size will destabilize the system towards reducing the population
+further.
+
+
+20-01-18
+Finished basic discrete type implementation (assuming the original interaction
+induced death. It's already much faster than some earlier experiments of mine.
+So that's nice. Next step, make this with the double interaction from above.
