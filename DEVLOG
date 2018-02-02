@@ -375,3 +375,8 @@ further.
 Finished basic discrete type implementation (assuming the original interaction
 induced death. It's already much faster than some earlier experiments of mine.
 So that's nice. Next step, make this with the double interaction from above.
+
+
+31-01-18
+Renamed project completely, as it is no longer a tau-leaping thing. Also made
+a variant which changes both birth and death rates (as above).
