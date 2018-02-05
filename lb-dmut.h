@@ -88,7 +88,7 @@ public:
     size_t death_total = 0;
 
     // std::cout.precision(3);
-    std::cout << "time\tsize1\tsize2\n";
+    std::cout << "time\tsize1\tsize2\ttotalbirth\ttotaldeath\n";
     std::cout << t;
     for (auto x: X) std::cout << '\t' << x;
     std::cout << '\t' << birth_total << '\t' << death_total <<'\n';
