@@ -10,6 +10,6 @@ using namespace std;
 
 int main() {
   LB<Cell> lb;
-  lb.set_cell_count(0, 500000);
-  lb.simulate(20);
+  lb.set_cell_count(0, 100);
+  lb.simulate(100);
 }

@@ -21,8 +21,8 @@ public:
 
   template <typename T>
   double get_birth_rate(T first, T last) {
-    if (id) return 1.0;
-    else return 0.1;
+    if (id) return 1.2;
+    else return 1.0;
   }
 
   template <typename T>
@@ -32,20 +32,20 @@ public:
 
   template <typename T>
   double get_birth_interaction(T first, T last) {
-    // return 0.0000010;
+    return 0.0000010;
     // return 0.0000005;
     // return 0.0000002;
     // return 0.0000001;
-    return 0.0;
+    // return 0.0;
   }
 
   template <typename T>
   double get_death_interaction(T first, T last) {
-    // return 0.0;
+    return 0.0;
     // return 0.0000005;
     // return 0.0000008;
     // return 0.0000009;
-    return 0.0000010;
+    // return 0.0000010;
   }
 
   template <typename T>
