@@ -6,57 +6,50 @@
 #include <random>
 
 
+static double mutation_rate;
+static double birth_rates[2];
+static double death_rates[2];
+static double birth_interactions[2];
+static double death_interactions[2];
+
+
 class Cell {
 public:
-  Cell(size_t id)
-    : id(id) { }
+  Cell(size_t type)
+    : type(type) { }
 
   static size_t get_type_count() {
     return 2;
   }
 
-  size_t get_type_id() {
-    return id;
+  template <typename T>
+  double get_birth_rate() {
+    return birth_rates[type];
   }
 
   template <typename T>
-  double get_birth_rate(T first, T last) {
-    if (id) return 1.2;
-    else return 1.0;
+  double get_death_rate() {
+    return death_rates[type];
   }
 
   template <typename T>
-  double get_death_rate(T first, T last) {
-    return 0.1;
+  double get_birth_interaction() {
+    return birth_interactions[type];
   }
 
   template <typename T>
-  double get_birth_interaction(T first, T last) {
-    return 0.0000010;
-    // return 0.0000005;
-    // return 0.0000002;
-    // return 0.0000001;
-    // return 0.0;
-  }
-
-  template <typename T>
-  double get_death_interaction(T first, T last) {
-    return 0.0;
-    // return 0.0000005;
-    // return 0.0000008;
-    // return 0.0000009;
-    // return 0.0000010;
+  double get_death_interaction() {
+    return death_interactions[type];
   }
 
   template <typename T>
   size_t mutate(T rng) {
-    return (id + (std::uniform_real_distribution<float>()(rng) < 0.00001)) % 2;
+    return (type + (std::uniform_real_distribution<float>()(rng) < mutation_rate)) % 2;
   }
 
 
-
 private:
-  size_t id = 1;
+  size_t type;
 
 };
 

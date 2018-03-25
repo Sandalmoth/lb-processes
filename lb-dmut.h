@@ -10,6 +10,8 @@
 #include <iostream>
 #include <cmath>
 
+#include "deep_stack.h"
+
 
 template <typename TCell, typename TRng=std::mt19937>
 class LB {
@@ -41,9 +43,8 @@ public:
 
   void get_birth_rates() {
     for (size_t i = 0; i < type_count; ++i) {
-      // a[i*3] = cells[i].get_birth_rate(std::begin(X), std::end(X));
-      double rate = cells[i].get_birth_rate(std::begin(X), std::end(X));
-      double interaction = cells[i].get_birth_interaction(std::begin(X), std::end(X));
+      double rate = cells[i].get_birth_rate();
+      double interaction = cells[i].get_birth_interaction();
       int sizemult = X.sum() - 1;
       double ai = X[i] * rate - sizemult * X[i] * interaction;
       if (ai >= 0.0)
@@ -52,14 +53,12 @@ public:
         a[i*2] = 0;
         a[i*2 + 1] -= ai;
       }
-      // a[i*2] = std::max(X[i] * rate - sizemult * X[i] * interaction, 0.0);
     }
   }
   void get_death_rates() {
     for (size_t i = 0; i < type_count; ++i) {
-      // a[i*3 + 1] = cells[i].get_death_rate(std::begin(X), std::end(X));
-      double rate = cells[i].get_death_rate(std::begin(X), std::end(X));
-      double interaction = cells[i].get_death_interaction(std::begin(X), std::end(X));
+      double rate = cells[i].get_death_rate();
+      double interaction = cells[i].get_death_interaction();
       int sizemult = X.sum() - 1;
       a[i*2 + 1] = X[i] * rate + sizemult * X[i] * interaction;
     }
@@ -76,7 +75,6 @@ public:
     }
     P = log(1.0/r);
     // calculate all propensity values (a)
-    // These functions should probably be optimized with sfinae or something
     update_rates();
   }
 
@@ -87,7 +85,6 @@ public:
     size_t birth_total = 0;
     size_t death_total = 0;
 
-    // std::cout.precision(3);
     std::cout << "time\tsize1\tsize2\ttotalbirth\ttotaldeath\n";
     std::cout << t;
     for (auto x: X) std::cout << '\t' << x;
@@ -99,21 +96,11 @@ public:
 
     while (t < t_end) {
       dt = (P - T) / a;
-      // double d = dt.min();
 
       if (t > next_print) {
         std::cout << t;
         for (auto x: X) std::cout << '\t' << x;
         std::cout << '\t' << birth_total << '\t' << death_total <<'\n';
-        // for (auto x: P) std::cout << x << '\t';
-        // std::cout << std::endl;
-        // for (auto x: T) std::cout << x << '\t';
-        // std::cout << std::endl;
-        // for (auto x: a) std::cout << x << '\t';
-        // std::cout << std::endl;
-        // for (auto x: dt) std::cout << x << '\t';
-        // std::cout << std::endl;
-        // std::cout << std::endl;
         next_print += print_interval;
       }
 
@@ -121,7 +108,6 @@ public:
       double d = dt[u];
       t += d;
       int event_celltype = u/2;
-      // std::cout << u << '\n';
       if (u%2 == 0) {
         auto new_cell_id = cells[event_celltype].mutate(rng);
         ++X[new_cell_id];
@@ -152,6 +138,8 @@ private:
 
   TRng rng;
   std::uniform_real_distribution<double> urd;
+
+  DeepStack ids;
 
 };
 

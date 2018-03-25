@@ -1,20 +1,16 @@
 #include <iostream>
+#include <tclap/CmdLine.h>
 
 
-#include "lb-process.h"
-#include "cell.h"
+#include "lb-dmut.h"
+#include "cell-dmut.h"
 
 
 using namespace std;
 
 
-int main() {
-  cout << Cell::const_birth_rate::value << endl;
-  cout << Cell::const_death_rate::value << endl;
-  cout << Cell::const_interaction_death_rate::value << endl;
-  LBProcess<Cell> lbp;
-  for (int i = 0; i < 1000; ++i) {
-    lbp.add_cell(Cell(1.0, 0.5, 0.01));
-  }
-  lbp.simulate(2701);
+int main(int argc, char **argv) {
+  LB<Cell> lb;
+  lb.set_cell_count(0, 100);
+  lb.simulate(100);
 }
