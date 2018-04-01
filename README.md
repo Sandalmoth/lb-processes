@@ -1,2 +1,2 @@
-# tau-pounder
-Numerical simulation tool for the logistic branching process using tau-leaping
+# Two-type LB-process simulator
+Simulator using next-reaction-method with special recording class for visualization project.
