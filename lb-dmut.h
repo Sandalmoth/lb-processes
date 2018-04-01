@@ -98,28 +98,50 @@ public:
       double d = dt[u];
       t += d;
       int event_celltype = u/2;
+
+      std::cout << "new_cycle" << std::endl;
+
       if (u%2 == 0) {
+        std::cout << "birth begin" << std::endl;
         --X[event_celltype];
         auto new_cell_type1 = cells[event_celltype].mutate(rng);
         auto new_cell_type2 = cells[event_celltype].mutate(rng);
         ++X[new_cell_type1];
         ++X[new_cell_type2];
 
+        std::cout << X[event_celltype] << '\t' << event_celltype << '\t' << std::endl;
+
         int id_index = std::uniform_int_distribution<int>(0, extant_ids[event_celltype].size())(rng);
+        std::cout << id_index << std::endl;
         size_t id = extant_ids[event_celltype][id_index];
+        std::cout << id << std::endl;
         size_t new_ids[2] = {ids.pop(), ids.pop()};
+        extant_ids[new_cell_type1].push_back(new_ids[0]);
+        extant_ids[new_cell_type2].push_back(new_ids[1]);
         size_t new_types[2] = {new_cell_type1, new_cell_type2};
         record->insert(t, new_ids, new_types, id);
+        std::cout << "inserted" << std::endl;
         ids.push(id);
+        std::cout << "pushed id" << std::endl;
         extant_ids[event_celltype].erase(extant_ids[event_celltype].begin() + id_index);
+        std::cout << "birth end" << std::endl;
 
       } else {
+        std::cout << "death_begin" << std::endl;
         --X[event_celltype];
 
+        std::cout << X[event_celltype] << '\t' << event_celltype << '\t' << std::endl;
+
         int id_index = std::uniform_int_distribution<int>(0, extant_ids[event_celltype].size())(rng);
+        std::cout << id_index << std::endl;
         size_t id = extant_ids[event_celltype][id_index];
+        std::cout << id << std::endl;
+        record->terminate(t, id);
+        std::cout << "terminated" << std::endl;
         ids.push(id);
+        std::cout << "pushed id" << std::endl;
         extant_ids[event_celltype].erase(extant_ids[event_celltype].begin() + id_index);
+        std::cout << "death end" << std::endl;
       }
       T = T + a*d;
       r[u] = urd(rng);
