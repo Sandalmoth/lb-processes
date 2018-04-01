@@ -111,7 +111,7 @@ public:
 
         std::cout << X[event_celltype] << '\t' << event_celltype << '\t' << std::endl;
 
-        int id_index = std::uniform_int_distribution<int>(0, extant_ids[event_celltype].size())(rng);
+        int id_index = std::uniform_int_distribution<int>(0, extant_ids[event_celltype].size() - 1)(rng);
         std::cout << id_index << std::endl;
         size_t id = extant_ids[event_celltype][id_index];
         std::cout << id << std::endl;
@@ -132,7 +132,7 @@ public:
 
         std::cout << X[event_celltype] << '\t' << event_celltype << '\t' << std::endl;
 
-        int id_index = std::uniform_int_distribution<int>(0, extant_ids[event_celltype].size())(rng);
+        int id_index = std::uniform_int_distribution<int>(0, extant_ids[event_celltype].size() - 1)(rng);
         std::cout << id_index << std::endl;
         size_t id = extant_ids[event_celltype][id_index];
         std::cout << id << std::endl;
@@ -140,6 +140,8 @@ public:
         std::cout << "terminated" << std::endl;
         ids.push(id);
         std::cout << "pushed id" << std::endl;
+        std::cout << extant_ids[event_celltype].size() << std::endl;
+        for (auto x: extant_ids[event_celltype]) std::cout << x << ' '; std::cout << std::endl;
         extant_ids[event_celltype].erase(extant_ids[event_celltype].begin() + id_index);
         std::cout << "death end" << std::endl;
       }
