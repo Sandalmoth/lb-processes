@@ -22,22 +22,18 @@ public:
     return 2;
   }
 
-  template <typename T>
   double get_birth_rate() {
     return birth_rates[type];
   }
 
-  template <typename T>
   double get_death_rate() {
     return death_rates[type];
   }
 
-  template <typename T>
   double get_birth_interaction() {
     return birth_interactions[type];
   }
 
-  template <typename T>
   double get_death_interaction() {
     return death_interactions[type];
   }

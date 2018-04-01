@@ -15,6 +15,7 @@ class Record {
 public:
   virtual void insert(size_t id, size_t type) = 0;
   virtual void insert(double t, size_t id[2], size_t type[2], size_t parent_id) = 0;
+  virtual void terminate(double t, size_t id) = 0;
 };
 
 
@@ -68,6 +69,16 @@ public:
   }
 
 
+  virtual void terminate(double t, size_t id) {
+    auto it_parent = std::lower_bound(leaves.begin(), leaves.end(), id, [](auto n, size_t parent_id) {
+        return parent_id == n->id;
+      });
+    auto parent = *it_parent;
+    parent->life = t - parent->birthtime;
+    leaves.erase(it_parent);
+  }
+
+
   friend std::ostream &operator<<(std::ostream &out, const RecordForest &record);
 
 
@@ -87,7 +98,7 @@ std::ostream &operator<<(std::ostream &out, const std::shared_ptr<Node> n) {
 }
 std::ostream &operator<<(std::ostream &out, const RecordForest &record) {
   for (auto r: record.roots) {
-    out << r << ';';
+    out << r << ';' << std::endl;
   }
   return out;
 }
