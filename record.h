@@ -92,9 +92,9 @@ private:
 
 std::ostream &operator<<(std::ostream &out, const std::shared_ptr<Node> n) {
   if (n->left == nullptr && n->right == nullptr) {
-    out << n->id << ':' << n->life;
+    out << static_cast<char>('A' + n->type) << ':' << n->life;
   } else {
-    out << '(' << n->left << ',' << n->right << ')' << n->id << ':' << n->life;
+    out << '(' << n->left << ',' << n->right << ')' << static_cast<char>('A' + n->type) << ':' << n->life;
   }
   return out;
 }

@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
   try {
     TCLAP::CmdLine cmd("General treatment simulator", ' ', VERSION);
 
-    TCLAP::ValueArg<string> a_n0("n", "n0", "Starting cell count", false, "2 0", "\'integer integer\'", cmd);
+    TCLAP::ValueArg<string> a_n0("n", "n0", "Starting cell count", false, "1 0", "\'integer integer\'", cmd);
     TCLAP::ValueArg<string> a_birth_rate("b", "birth-rate", "Birth rate", false, "1.0 1.0", "\'double double\'", cmd);
     TCLAP::ValueArg<string> a_death_rate("d", "death-rate", "Death rate", false, "0.1 0.1", "\'double double\'", cmd);
     TCLAP::ValueArg<string> a_birth_interaction("p", "birth-interaction", "Birth interaction", false, "0.0, 0.0", "\'double double\'", cmd);
