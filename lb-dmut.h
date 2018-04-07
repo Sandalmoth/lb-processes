@@ -91,7 +91,7 @@ public:
     double t_end = t + interval;
     init();
 
-    while (t < t_end) {
+    while (t < t_end && X.sum() > 0) {
       dt = (P - T) / a;
 
       size_t u = std::min_element(std::begin(dt), std::end(dt)) - std::begin(dt);
@@ -121,13 +121,13 @@ public:
       } else {
         --X[event_celltype];
 
-
         int id_index = std::uniform_int_distribution<int>(0, extant_ids[event_celltype].size() - 1)(rng);
         size_t id = extant_ids[event_celltype][id_index];
         record->terminate(t, id);
         ids.push(id);
         extant_ids[event_celltype].erase(extant_ids[event_celltype].begin() + id_index);
       }
+
       T = T + a*d;
       r[u] = urd(rng);
       P[u] += log(1.0/r[u]);
