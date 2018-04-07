@@ -54,9 +54,10 @@ public:
 
 
   virtual void insert(double t, size_t id[2], size_t type[2], size_t parent_id) {
-    auto it_parent = std::lower_bound(leaves.begin(), leaves.end(), parent_id, [](auto n, size_t parent_id) {
-        return parent_id == n->id;
-      });
+    auto it_parent = std::lower_bound(leaves.begin(), leaves.end(), parent_id
+                                      , [](auto n, size_t parent_id) {
+                                        return n->id < parent_id;
+                                      });
     auto child1 = std::make_shared<Node>(id[0], type[0], t);
     auto child2 = std::make_shared<Node>(id[1], type[1], t);
     auto parent = *it_parent;
@@ -70,9 +71,10 @@ public:
 
 
   virtual void terminate(double t, size_t id) {
-    auto it_parent = std::lower_bound(leaves.begin(), leaves.end(), id, [](auto n, size_t parent_id) {
-        return parent_id == n->id;
-      });
+    auto it_parent = std::lower_bound(leaves.begin(), leaves.end(), id
+                                      , [](auto n, size_t parent_id) {
+                                        return n->id < parent_id;
+                                      });
     auto parent = *it_parent;
     parent->life = t - parent->birthtime;
     leaves.erase(it_parent);

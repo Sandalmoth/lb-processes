@@ -88,11 +88,6 @@ int main(int argc, char **argv) {
 
     // Sanity checks
     for (int i = 0; i < 2; ++i) {
-      cout << a.starting_population[i] << '\t'
-           << birth_rates[i] << '\t'
-           << death_rates[i] << '\t'
-           << birth_interactions[i] << '\t'
-           << death_interactions[i] << endl;
       assert(a.starting_population[i] >= 0);
       assert(birth_rates[i] > 0); // Technically simulating a process without birth could be interesting. But, as implemented, the simulation would never end.
       assert(death_rates[i] >= 0);
