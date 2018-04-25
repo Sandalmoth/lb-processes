@@ -133,6 +133,13 @@ public:
       P[u] += log(1.0/r[u]);
       update_rates();
     }
+
+    // terminate so that all cells get a valid time
+    for (auto id: extant_ids[0])
+      record->terminate(t, id);
+    for (auto id: extant_ids[1])
+      record->terminate(t, id);
+
   }
 
 private:

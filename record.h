@@ -100,7 +100,7 @@ std::ostream &operator<<(std::ostream &out, const std::shared_ptr<Node> n) {
 }
 std::ostream &operator<<(std::ostream &out, const RecordForest &record) {
   for (auto r: record.roots) {
-    out << r << ';' << std::endl;
+    out << r << ';';
   }
   return out;
 }
