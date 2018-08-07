@@ -380,3 +380,16 @@ So that's nice. Next step, make this with the double interaction from above.
 31-01-18
 Renamed project completely, as it is no longer a tau-leaping thing. Also made
 a variant which changes both birth and death rates (as above).
+
+
+07-08-18
+For most things I need to examine, the rate constants vary with time. The NRM
+paper describes a way of handling it, but contains an integral equation that I
+cannot solve for a general case. And it seems to have no obvious solution for
+general continuous functinos either (like fourier series or similar).
+
+However, I think that doing essentially a midpoint rule integration could be an
+ok approximation. Basically, we assume that the birth rate during any interval
+is approximately described by it's value halfway through that interval. Since
+events are fairly common in models I want to study, the timescale should become
+finely divided enough with regards to the changing activity.
