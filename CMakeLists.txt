@@ -5,6 +5,7 @@ add_executable(nlb test2.cpp)
 add_executable(dis testd.cpp)
 add_executable(dmut testm.cpp)
 add_executable(chng testc.cpp)
+add_executable(two twofactor.cpp)
 
 # Compilation flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++17")
