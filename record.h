@@ -106,4 +106,78 @@ std::ostream &operator<<(std::ostream &out, const RecordForest &record) {
 }
 
 
+// List based record
+struct Element {
+  double t;
+  size_t counts[2];
+};
+
+class RecordList : public Record {
+public:
+  RecordList(double resolution)
+    : resolution(resolution) {
+    time = 0.0;
+    counts[0] = counts[1] = 0;
+    types.resize(1);
+    next_record = 0.0;
+  }
+
+
+  virtual void insert(size_t id, size_t type) {
+    ++counts[type];
+    if (types.size() < id)
+      types.resize(types.size() * 2);
+    types[id] = type;
+  }
+
+
+  virtual void insert(double t, size_t id[2], size_t type[2], size_t parent_id) {
+    if (t > next_record) {
+      trace.emplace_back(Element{time, {counts[0], counts[1]}});
+      while (next_record < t)
+        next_record += resolution;
+    }
+    ++counts[type[0]];
+    ++counts[type[1]];
+    --counts[types[parent_id]];
+    time = t;
+    if (types.size() < std::max(id[0], id[1]))
+      types.resize(types.size() * 2);
+    types[id[0]] = type[0];
+    types[id[1]] = type[1];
+  }
+
+
+  virtual void terminate(double t, size_t id) {
+    if (t > next_record) {
+      trace.emplace_back(Element{time, {counts[0], counts[1]}});
+      while (next_record < t)
+        next_record += resolution;
+    }
+    --counts[types[id]];
+  }
+
+
+  friend std::ostream &operator<<(std::ostream &out, const RecordList &record);
+
+
+private:
+  double resolution;
+  size_t counts[2];
+  double time;
+  double next_record;
+  std::vector<Element> trace;
+  std::vector<size_t> types;
+};
+
+std::ostream &operator<<(std::ostream &out, const RecordList &record) {
+  std::cout << "time\tn1\tn2\n";
+  for (auto x: record.trace) {
+    std::cout << x.t << '\t' << x.counts[0] << '\t' << x.counts[1] << '\n';
+  }
+  return out;
+}
+
+
+
 #endif
