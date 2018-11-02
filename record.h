@@ -125,7 +125,7 @@ public:
 
   virtual void insert(size_t id, size_t type) {
     ++counts[type];
-    if (types.size() < id)
+    if (types.size() <= id)
       types.resize(types.size() * 2);
     types[id] = type;
   }
@@ -141,7 +141,7 @@ public:
     ++counts[type[1]];
     --counts[types[parent_id]];
     time = t;
-    if (types.size() < std::max(id[0], id[1]))
+    if (types.size() <= std::max(id[0], id[1]))
       types.resize(types.size() * 2);
     types[id[0]] = type[0];
     types[id[1]] = type[1];

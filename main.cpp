@@ -12,7 +12,7 @@
 using namespace std;
 
 
-const string VERSION = "1.1.0";
+const string VERSION = "1.1.1";
 
 
 enum class RecordType {
